@@ -5,7 +5,7 @@ const { DataTypes } = require("sequelize");
 module.exports = (sequelize) => {
   const attributes = {
     idcliente: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(13),
       primaryKey: true,
     },
     nombreCliente: {

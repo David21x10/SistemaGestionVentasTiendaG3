@@ -58,22 +58,27 @@ const deleteCliente = async (req, res) => {
 
 const updateCliente = async (req, res) => {
   try {
-      const { idcliente, nombreCliente, apellidoCliente, direccionCliente, telefonoCliente, correoCliente } = req.body; /////
+      const { idcliente, nombreCliente, apellidoCliente, direccionCliente, telefonoCliente, correoCliente } = req.body;
 
       if (!idcliente) {
           return res.status(400).json({ error: "Se necesita el id del cliente" });
       }
+
       const clienteUpdate = await cliente.findByPk(idcliente);
 
       if (!clienteUpdate) {
           return res.status(404).json({ error: "El cliente no fue encontrado" });
       } 
+
+      if (req.body.newIdcliente) {
+          clienteUpdate.idcliente = req.body.newIdcliente;
+      }
       await clienteUpdate.update({ 
-          nombreCliente: nombreCliente || actorUpdate.nombreCliente,
-          apellidoCliente: apellidoCliente || actorUpdate.apellidoCliente,
-          direccionCliente: direccionCliente || actorUpdate.direccionCliente,
-          telefonoCliente: telefonoCliente || actorUpdate.telefonoCliente,
-          correoCliente: correoCliente || actorUpdate.correoCliente 
+          nombreCliente: nombreCliente || clienteUpdate.nombreCliente,
+          apellidoCliente: apellidoCliente || clienteUpdate.apellidoCliente,
+          direccionCliente: direccionCliente || clienteUpdate.direccionCliente,
+          telefonoCliente: telefonoCliente || clienteUpdate.telefonoCliente,
+          correoCliente: correoCliente || clienteUpdate.correoCliente 
       });
 
       return res.status(200).json({ message: "Cliente actualizado exitosamente", cliente: clienteUpdate });
@@ -82,6 +87,7 @@ const updateCliente = async (req, res) => {
       return res.status(500).json({ error: error.message });
   }
 };
+
 
 module.exports = {
   getCliente,
