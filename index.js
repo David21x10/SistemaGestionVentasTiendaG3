@@ -1,12 +1,18 @@
-'use strict'
+"use strict";
 
-//para trabajar con variables de entotno el dotenv
-require('dotenv').config();
+const db = require("./app/config/db");
+const App = require("./app/app");
+require("dotenv").config();
 
-const App = require('./app/app');
 const PORT = process.env.PORT || process.env.APP_PORT;
 
-App.listen(parseInt(PORT), function (error){
-    if(error) return console.log(error);
-    console.info(`el servidor se está ejecutando en el puerto ${PORT}`)
-})
+db.sequelizeInstance
+  .sync()
+  .then(() => {
+    console.info("Base de Datos sincronizada con éxito");
+    App.listen(parseInt(PORT), function (error) {
+      if (error) return console.error(error);
+      console.info(`EL SERVIDOR SE ESTÁ EJECUTANDO EN EL PUERTO: ${PORT}`);
+    });
+  })
+  .catch((error) => console.error(error));
