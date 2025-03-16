@@ -19,19 +19,24 @@ async function getProducto(req, res) {
 
 const insertProducto = async (req, res) => {
   try {
-      const { idproducto } = req.body;
+    const { idproducto, idCategoria } = req.body;
 
-      const existenciaProducto = await producto.findOne({ where: { idproducto } });
-      if (existenciaProducto) {
-          return res.status(400).json({ message: 'El producto ya existe en la base de datos' });
-      }
+    const existenciaCategoria = await db.categoria.findOne({ where: { idCategoria } });
+    if (!existenciaCategoria) {
+        return res.status(400).json({ message: 'No se puede ingresar el producto porque la categoría no existe en la base de datos' });
+    }
 
-      const newProducto = await producto.create(req.body);
-      res.status(201).json({ message: 'Producto guardado exitosamente', data: newProducto });
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: error.message });
-  }
+    const existenciaProducto = await producto.findOne({ where: { idproducto } });
+    if (existenciaProducto) {
+        return res.status(400).json({ message: 'El producto ya existe en la base de datos' });
+    }
+
+    const newProducto = await producto.create(req.body);
+    res.status(201).json({ message: 'Producto guardado exitosamente', data: newProducto });
+} catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+}
 };
 
 const deleteProducto = async (req, res) => {
@@ -64,6 +69,11 @@ const updateProducto = async (req, res) => {
           return res.status(400).json({ error: "Se necesita el id del producto" });
       }
 
+      const existenciaCategoria = await db.categoria.findOne({ where: { idCategoria } });
+      if (!existenciaCategoria) {
+          return res.status(400).json({ message: 'No se puede actualizar el producto porque la categoría no existe en la base de datos' });
+      }
+
       const productoUpdate = await producto.findByPk(idproducto);
 
       if (!productoUpdate) {
@@ -71,7 +81,7 @@ const updateProducto = async (req, res) => {
       } 
 
       if (req.body.newIdproducto) {
-          ProductoUpdate.idproducto = req.body.newIdproducto;
+          productoUpdate.idproducto = req.body.newIdproducto;
       }
       await productoUpdate.update({ 
           nombreProducto: nombreProducto || productoUpdate.nombreProducto,

@@ -13,15 +13,15 @@ async function getCategoria(req, res) {
     .catch((error) => {
       res
         .status(500)
-        .send({ message: error.message || "sucedió un errror inesperado" });
+        .send({ message: error.message || "Sucedió un errror inesperado" });
     });
 }
 
 const insertCategoria = async (req, res) => {
   try {
-      const { idcategoria } = req.body;
+      const { idCategoria, nombreCategoria } = req.body;
 
-      const existenciaCategoria = await categoria.findOne({ where: { idcategoria } });
+      const existenciaCategoria = await categoria.findOne({ where: { idCategoria } });
       if (existenciaCategoria) {
           return res.status(400).json({ message: 'La categoria ya existe en la base de datos' });
       }
@@ -36,13 +36,13 @@ const insertCategoria = async (req, res) => {
 
 const deleteCategoria = async (req, res) => {
   try {
-      const { idcategoria } = req.body; 
+      const { idCategoria } = req.body; 
 
-      if (!idcategoria) {
-          return res.status(400).json({ error: "El idcategoria es requerido" });
+      if (!idCategoria) {
+          return res.status(400).json({ error: "El idCategoria es requerido" });
       }
 
-      const categoriaRemove = await categoria.findByPk(idcategoria);
+      const categoriaRemove = await categoria.findByPk(idCategoria);
 
       if (categoriaRemove) {
           await categoriaRemove.destroy(); 
@@ -64,14 +64,14 @@ const updateCategoria = async (req, res) => {
           return res.status(400).json({ error: "Se necesita el id de categoria" });
       }
 
-      const categoriaUpdate = await categoria.findByPk(idcategoria);
+      const categoriaUpdate = await categoria.findByPk(idCategoria);
 
       if (!categoriaUpdate) {
           return res.status(404).json({ error: "La categoria no fue encontrada" });
       } 
 
       if (req.body.newIdcategoria) {
-          categoriaUpdate.idcategoria = req.body.newIdcategoria;
+          categoriaUpdate.idCategoria = req.body.newIdcategoria;
       }
       await categoriaUpdate.update({ 
           nombreCategoria: nombreCategoria || categoriaUpdate.nombreCategoria,

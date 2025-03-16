@@ -1,12 +1,21 @@
 "use strict";
 
 const { DataTypes } = require("sequelize");
+const db = require("../config/db");
+const categoriaModel = require("./categoriaModel");
 
 module.exports = (sequelize) => {
   const attributes = {
     idproducto: {
-      type: DataTypes.INTEGER(13),
+      type: DataTypes.INTEGER,
       primaryKey: true,
+    },
+    idCategoria: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: categoriaModel,
+        key: "idCategoria",
+      },
     },
     nombreProducto: {
       type: DataTypes.STRING(50),
@@ -18,7 +27,7 @@ module.exports = (sequelize) => {
       type: DataTypes.DECIMAL(10, 2),
     },
     stockProducto: {
-      type: DataTypes.INTEGER(10),
+      type: DataTypes.INTEGER,
     },
 
   };
