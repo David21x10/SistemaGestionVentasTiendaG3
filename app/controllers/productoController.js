@@ -58,7 +58,7 @@ const deleteProducto = async (req, res) => {
 
 const updateProducto = async (req, res) => {
   try {
-      const { idproducto, nombreProducto, descripcionProducto, precioProducto, stockProducto } = req.body;
+      const { idproducto, idCategoria, nombreProducto, descripcionProducto, precioProducto, stockProducto } = req.body;
 
       if (!idproducto) {
           return res.status(400).json({ error: "Se necesita el id del producto" });
@@ -75,6 +75,7 @@ const updateProducto = async (req, res) => {
       }
       await productoUpdate.update({ 
           nombreProducto: nombreProducto || productoUpdate.nombreProducto,
+          idCategoria: idCategoria || productoUpdate.idCategoria,
           descripcionProducto: descripcionProducto || productoUpdate.descripcionProducto,
           precioProducto: precioProducto || productoUpdate.precioProducto,
           stockProducto: stockProducto || productoUpdate.stockProducto,
