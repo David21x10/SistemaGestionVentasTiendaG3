@@ -33,6 +33,6 @@ db.sequelizeInstance = sequelizeInstance;
 db.cliente = require("../models/clienteModel")(sequelizeInstance, Sequelize);
 db.producto = require("../models/productoModel")(sequelizeInstance, Sequelize);
 db.categoria = require("../models/categoriaModel")(sequelizeInstance, Sequelize);
-db.venta = require("../models/ventaModel")(sequelizeInstance, Sequelize);
+db.login = require("../models/loginModel")(sequelizeInstance, Sequelize);
 
 module.exports = db;

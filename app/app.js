@@ -9,6 +9,7 @@ const clienteRoutes = require('./routes/clienteRoutes');
 const productoRoutes = require('./routes/productoRoutes');
 const categoriaRoutes = require('./routes/categoriaRoutes');
 const ventaRoutes = require('./routes/ventaRoutes');
+const loginRoutes = require('./routes/loginRoutes');
 
 App.use(
   cors({
@@ -25,5 +26,6 @@ App.use('/api/Cliente', clienteRoutes);
 App.use('/api/Producto', productoRoutes);
 App.use('/api/Categoria', categoriaRoutes);
 App.use('/api/Venta', ventaRoutes);
+App.use('/api/Login', loginRoutes);
 
 module.exports = App;
