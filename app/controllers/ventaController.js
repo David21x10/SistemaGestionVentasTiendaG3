@@ -3,6 +3,8 @@
 const { where } = require("sequelize");
 const db = require("../config/db");
 const venta = db.venta;
+const Producto = db.producto; 
+const Cliente = db.cliente;
 
 async function getVenta(req, res) {
   venta
@@ -19,24 +21,48 @@ async function getVenta(req, res) {
 
 const insertVenta = async (req, res) => {
     try {
-        
-        const ultimaVenta = await venta.findOne({
-            order: [['idventa', 'DESC']] 
-        });
-
-        const nuevoIdVenta = ultimaVenta ? ultimaVenta.idventa + 1 : 1; 
-
-        const nuevaVenta = await venta.create({
-            idventa: nuevoIdVenta,
-            ...req.body
-        });
-
-        res.status(201).json({ message: 'Venta guardada exitosamente', data: nuevaVenta });
+      const { idcliente, idProducto, cantidadVenta } = req.body;
+  
+      const producto = await Producto.findOne({
+        where: { idproducto: idProducto }
+      });
+  
+      if (!producto) {
+        return res.status(404).json({ error: "Producto no encontrado" });
+      }
+  
+      let totalVenta = producto.precioProducto * cantidadVenta;
+      totalVenta = totalVenta.toFixed(2);
+  
+      if (producto.stockProducto < cantidadVenta) {
+        return res.status(400).json({ error: "No hay suficiente stock para completar la venta" });
+      }
+  
+      const ultimaVenta = await venta.findOne({
+        order: [['idventa', 'DESC']]
+      });
+  
+      const nuevoIdVenta = ultimaVenta ? ultimaVenta.idventa + 1 : 1;
+  
+      const nuevaVenta = await venta.create({
+        idventa: nuevoIdVenta,
+        idcliente,
+        idProducto,
+        cantidadVenta,
+        totalVenta,
+        fechaVenta: new Date(),
+      });
+  
+      await producto.update({
+        stockProducto: producto.stockProducto - cantidadVenta
+      });
+  
+      res.status(201).json({ message: 'Venta guardada exitosamente', data: nuevaVenta });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: error.message });
+      console.error(error);
+      res.status(500).json({ error: error.message });
     }
-};
+  };
 
 const deleteVenta = async (req, res) => {
   try {
