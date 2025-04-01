@@ -18,26 +18,38 @@ async function getProducto(req, res) {
 }
 
 const insertProducto = async (req, res) => {
-  try {
-    const { idproducto, idCategoria } = req.body;
-
-    const existenciaCategoria = await db.categoria.findOne({ where: { idCategoria } });
-    if (!existenciaCategoria) {
-        return res.status(400).json({ message: 'No se puede ingresar el producto porque la categoría no existe en la base de datos' });
+    try {
+      const { nombreProducto, idCategoria, descripcionProducto, precioProducto, stockProducto } = req.body;
+  
+      if (!nombreProducto || !idCategoria || !descripcionProducto || !precioProducto || !stockProducto) {
+        return res
+          .status(400)
+          .json({ error: "Todos los campos son obligatorios" });
+      }
+  
+      const existenciaProducto = await producto.findOne({
+        where: { nombreProducto }, 
+      });
+      
+      if (existenciaProducto) {
+        return res.status(400).json({ message: "El producto ya está insertado" });
+      }
+  
+      const result = await producto.create({
+        nombreProducto,
+        idCategoria,
+        descripcionProducto,
+        precioProducto,
+        stockProducto
+      });
+  
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error al insertar el producto:", error);
+      res.status(500).json({ error: "Error al insertar el producto" });
     }
-
-    const existenciaProducto = await producto.findOne({ where: { idproducto } });
-    if (existenciaProducto) {
-        return res.status(400).json({ message: 'El producto ya existe en la base de datos' });
-    }
-
-    const newProducto = await producto.create(req.body);
-    res.status(201).json({ message: 'Producto guardado exitosamente', data: newProducto });
-} catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-}
-};
+  };
+  
 
 const deleteProducto = async (req, res) => {
   try {

@@ -1,94 +1,68 @@
 "use strict";
 
-const { where } = require("sequelize");
 const db = require("../config/db");
-const login = db.login;
+const User = db.login;
+const bcrypt = require('bcrypt');
+const service = require('../services/services');
+const { Op } = require('sequelize');
 
-async function getLogin(req, res) {
-  login
-    .findAll()
-    .then((result) => {
-      res.status(200).send({ result });
+async function signUp(req, res) {
+    let newPass = undefined;
+
+    await bcrypt.genSalt(10)
+        .then(async salts => {
+            await bcrypt.hash(req.body['password'], salts)
+                .then(hash => newPass = hash)
+                .catch(error => console.error(error))
+        })
+        .catch(error => console.error(error));
+
+    const existingUser = await User.findOne({ where: { user: req.body['user'] } });
+    if (existingUser) {
+        return res.status(400).send({ message: "El usuario ya existe" });
+    }
+
+    User.create({
+        user: req.body['user'],
+        password: newPass,
+        "rol": req.body['rol']
     })
-    .catch((error) => {
-      res
-        .status(500)
-        .send({ message: error.message || "sucedió un errror inesperado" });
-    });
+        .then(data => {
+            res.status(200).send(data)
+        })
+        .catch(err => {
+            res.status(500).send({
+                message: err.message || 'Sucedió un error inesperado'
+            });
+        });
 }
 
-const insertLogin = async (req, res) => {
-  try {
-      const { user } = req.body;
+async function signIn(req, res) {
+    const user = req.body['user'];
+    try {
+        const data = await User.findOne({ where: { user: { [Op.eq]: user } } });
 
-      const existenciaLogin = await login.findOne({ where: { user } });
-      if (existenciaLogin) {
-          return res.status(400).json({ message: 'El usuario ya existe en la base de datos' });
-      }
+        if (!data) {
+            return res.status(404).send({ message: 'Usuario no encontrado' });
+        }
 
-      const newLogin = await login.create(req.body);
-      res.status(201).json({ message: 'Usuario guardado exitosamente', data: newLogin });
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: error.message });
-  }
-};
-
-const deleteLogin = async (req, res) => {
-  try {
-      const { user } = req.body; 
-
-      if (!user) {
-          return res.status(400).json({ error: "El user es requerido" });
-      }
-
-      const userRemove = await login.findByPk(user);
-
-      if (userRemove) {
-          await userRemove.destroy(); 
-          return res.status(200).json({ message: "Usuario eliminado de forma exitosa" });
-      } else {
-          return res.status(404).json({ error: "El usuario no fue encontrado" });
-      }
-  } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: error.message });
-  }
-};
-
-const updateLogin = async (req, res) => {
-  try {
-      const { user, password, rol } = req.body;
-
-      if (!user) {
-          return res.status(400).json({ error: "Se necesita el user" });
-      }
-
-      const userUpdate = await login.findByPk(user);
-
-      if (!userUpdate) {
-          return res.status(404).json({ error: "El usuario no fue encontrado" });
-      } 
-
-      if (req.body.newuser) {
-          userUpdate.user = req.body.newuser;
-      }
-      await userUpdate.update({ 
-          password: password || userUpdate.password,
-          rol: rol || userUpdate.rol
-      });
-
-      return res.status(200).json({ message: "Usuario actualizado exitosamente", user: userUpdate });
-  } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: error.message });
-  }
-};
+        const result = bcrypt.compareSync(req.body['password'], data['password']);
+        if (result) {
+            return res.status(200).send({
+                message: 'Logged in',
+                user: data['user'],
+                rol: data['rol'],
+                token: service.createToken(data['user']),
+            });
+        } else {
+            return res.status(500).send({ message: 'Sucedió un error inesperado' });
+        }
+    } catch (err) {
+        return res.status(500).send({
+            message: err.message || "Sucedió un error al obtener los registros del usuario",
+        });
+    }
+}
 
 
-module.exports = {
-    getLogin,
-    insertLogin,
-    deleteLogin,
-    updateLogin
-};
+module.exports = { signUp, signIn };

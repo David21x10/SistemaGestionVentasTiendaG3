@@ -18,21 +18,34 @@ async function getCategoria(req, res) {
 }
 
 const insertCategoria = async (req, res) => {
-  try {
-      const { idCategoria, nombreCategoria } = req.body;
-
-      const existenciaCategoria = await categoria.findOne({ where: { idCategoria } });
-      if (existenciaCategoria) {
-          return res.status(400).json({ message: 'La categoria ya existe en la base de datos' });
+    try {
+      const { nombreCategoria } = req.body;
+  
+      if (!nombreCategoria) {
+        return res
+          .status(400)
+          .json({ error: "Todos los campos son obligatorios" });
       }
-
-      const newCategoria = await categoria.create(req.body);
-      res.status(201).json({ message: 'La categoria se guardo exitosamente', data: newCategoria });
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: error.message });
-  }
-};
+  
+      const existenciaCategoria = await categoria.findOne({
+        where: { nombreCategoria }, 
+      });
+      
+      if (existenciaCategoria) {
+        return res.status(400).json({ message: "La categoría ya está insertada" });
+      }
+  
+      const result = await categoria.create({
+        nombreCategoria,
+      });
+  
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error al insertar el registro:", error);
+      res.status(500).json({ error: "Error al insertar el registro" });
+    }
+  };
+  
 
 const deleteCategoria = async (req, res) => {
   try {
