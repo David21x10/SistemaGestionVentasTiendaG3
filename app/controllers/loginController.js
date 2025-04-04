@@ -43,9 +43,8 @@ async function signIn(req, res) {
         const data = await User.findOne({ where: { user: { [Op.eq]: user } } });
 
         if (!data) {
-            return res.status(404).send({ message: 'Usuario no encontrado' });
+            return res.status(401).send({ message: 'Credenciales incorrectas' });
         }
-
         const result = bcrypt.compareSync(req.body['password'], data['password']);
         if (result) {
             return res.status(200).send({
@@ -55,9 +54,11 @@ async function signIn(req, res) {
                 token: service.createToken(data['user']),
             });
         } else {
-            return res.status(500).send({ message: 'Sucedió un error inesperado' });
+
+            return res.status(401).send({ message: 'Credenciales incorrectas' });
         }
     } catch (err) {
+
         return res.status(500).send({
             message: err.message || "Sucedió un error al obtener los registros del usuario",
         });
