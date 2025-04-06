@@ -18,51 +18,43 @@ async function getVenta(req, res) {
         .send({ message: error.message || "sucedió un errror inesperado" });
     });
 }
-
 const insertVenta = async (req, res) => {
-    try {
-      const { idcliente, idProducto, cantidadVenta } = req.body;
-  
-      const producto = await Producto.findOne({
-        where: { idproducto: idProducto }
-      });
-  
-      if (!producto) {
-        return res.status(404).json({ error: "Producto no encontrado" });
-      }
-  
-      let totalVenta = producto.precioProducto * cantidadVenta;
-      totalVenta = totalVenta.toFixed(2);
-  
-      if (producto.stockProducto < cantidadVenta) {
-        return res.status(400).json({ error: "No hay suficiente stock para completar la venta" });
-      }
-  
-      const ultimaVenta = await venta.findOne({
-        order: [['idventa', 'DESC']]
-      });
-  
-      const nuevoIdVenta = ultimaVenta ? ultimaVenta.idventa + 1 : 1;
-  
-      const nuevaVenta = await venta.create({
-        idventa: nuevoIdVenta,
-        idcliente,
-        idProducto,
-        cantidadVenta,
-        totalVenta,
-        fechaVenta: new Date(),
-      });
-  
-      await producto.update({
-        stockProducto: producto.stockProducto - cantidadVenta
-      });
-  
-      res.status(201).json({ message: 'Venta guardada exitosamente', data: nuevaVenta });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: error.message });
+  try {
+    const { idventa, idcliente, idProducto, cantidadVenta, totalVenta } = req.body;
+
+    const producto = await Producto.findOne({
+      where: { idproducto: idProducto }
+    });
+
+    if (!producto) {
+      return res.status(404).json({ error: "Producto no encontrado" });
     }
-  };
+
+    if (producto.stockProducto < cantidadVenta) {
+      return res.status(400).json({ error: "No hay suficiente stock para completar la venta" });
+    }
+
+    // Crear venta para cada producto en la misma transacción
+    const nuevaVenta = await venta.create({
+      idventa,  // El idventa se pasa desde el frontend
+      idcliente,
+      idProducto,
+      cantidadVenta,
+      totalVenta,
+      fechaVenta: new Date(),
+    });
+
+    await producto.update({
+      stockProducto: producto.stockProducto - cantidadVenta
+    });
+
+    res.status(201).json({ message: 'Venta guardada exitosamente', data: nuevaVenta });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 const deleteVenta = async (req, res) => {
   try {
@@ -116,10 +108,23 @@ const updateVenta = async (req, res) => {
   }
 };
 
+async function getUltimoIdVenta(req, res) {
+  try {
+    const ultimaVenta = await venta.findOne({
+      order: [['idventa', 'DESC']],
+    });
+    const proximoId = ultimaVenta ? ultimaVenta.idventa + 1 : 1;
+    res.status(200).send({ idventa: proximoId });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Error inesperado" });
+  }
+}
+
 
 module.exports = {
   getVenta,
   insertVenta,
   deleteVenta,
-  updateVenta
+  updateVenta,
+  getUltimoIdVenta
 };
