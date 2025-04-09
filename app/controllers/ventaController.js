@@ -34,14 +34,15 @@ const insertVenta = async (req, res) => {
       return res.status(400).json({ error: "No hay suficiente stock para completar la venta" });
     }
 
-    // Crear venta para cada producto en la misma transacción
+    const hoy = new Date();
+    const fechaLocal = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000);
     const nuevaVenta = await venta.create({
-      idventa,  // El idventa se pasa desde el frontend
+      idventa,  
       idcliente,
       idProducto,
       cantidadVenta,
       totalVenta,
-      fechaVenta: new Date(),
+      fechaVenta: fechaLocal,
     });
 
     await producto.update({
